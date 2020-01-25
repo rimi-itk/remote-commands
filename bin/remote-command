@@ -1,0 +1,18 @@
+#!/usr/bin/env php
+<?php
+
+require __DIR__.'/../vendor/autoload.php';
+
+if (PHP_VERSION_ID < 70300) {
+    fwrite(STDERR, "Only PHP 7.3 or newer supported.\n");
+    exit(1);
+}
+
+use Symfony\Component\Console\Application;
+
+$application = new Application();
+$application->add(new App\Command\Drupal\DrushCommand());
+$application->add(new App\Command\Symfony\ConsoleCommand());
+$application->run();
+
+exit;

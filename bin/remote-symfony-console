@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -o errexit -o errtrace -o noclobber -o nounset -o pipefail
+IFS=$'\n\t'
+
+dir=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
+
+$dir/remote-command symfony:console "$@"
