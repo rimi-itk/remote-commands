@@ -1,12 +1,19 @@
 {
+    "name": "rimi-itk/remote-commands",
+    "description": "Run Drupal and Symfony cli commands via ssh",
+    "license": "MIT",
     "require": {
         "ext-json": "*",
         "ext-posix": "*",
         "php": "^7.3",
         "symfony/console": "^5.0",
-        "symfony/process": "^5.0",
-        "symfony/yaml": "^5.0"
+        "symfony/process": "^5.0"
     },
+    "bin": [
+        "bin/remote-command",
+        "bin/remote-drupal-drush",
+        "bin/remote-symfony-console"
+    ],
     "autoload": {
         "psr-4": {
             "App\\": "src/"

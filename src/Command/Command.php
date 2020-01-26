@@ -12,7 +12,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
-use Symfony\Component\Yaml\Yaml;
 
 abstract class Command extends BaseCommand
 {
@@ -24,8 +23,13 @@ abstract class Command extends BaseCommand
     {
         $this
             ->addArgument('site')
-            ->addArgument('arguments and options', InputArgument::IS_ARRAY)
-            ->addOption('list-sites');
+            ->addArgument('arguments and options', InputArgument::IS_ARRAY);
+
+        $this
+            ->addOption('dump-sites', null, InputOption::VALUE_NONE, 'Dump configured sites as JSON');
+
+        $this->addOption('dump-completions', null, InputOption::VALUE_NONE, 'Dump completions scripts')
+            ->addOption('shell', null, InputOption::VALUE_REQUIRED, 'Shell type ("bash" or "zsh")', isset($_SERVER['SHELL']) ? basename($_SERVER['SHELL'], '.exe') : null);
 
         // @see https://stackoverflow.com/a/39400593
         $this->setDefinition(new class($this->getDefinition(), $this->dynamicOptions) extends InputDefinition {
@@ -58,12 +62,13 @@ abstract class Command extends BaseCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        if ($input->getOption('list-sites')) {
-            $sites = $this->getSites();
-            $output->writeln(Yaml::dump($sites));
-
-            return 0;
+        if ($input->getOption('dump-sites')) {
+            return $this->dumpSites($input, $output);
         }
+        if ($input->getOption('dump-completions')) {
+            return $this->dumpCompletions($input, $output);
+        }
+
         $name = $input->getArgument('site');
         if (null === $name) {
             throw new RuntimeException('Not enough arguments (missing: "site").');
@@ -183,5 +188,26 @@ abstract class Command extends BaseCommand
         }
 
         return array_filter($hosts);
+    }
+
+    protected function dumpSites(InputInterface $input, OutputInterface $output)
+    {
+        $sites = $this->getSites();
+        $output->writeln(json_encode($sites, JSON_THROW_ON_ERROR, 512));
+
+        return 0;
+    }
+
+    protected function dumpCompletions(InputInterface $input, OutputInterface $output)
+    {
+        $shell = $input->getOption('shell');
+
+        ob_start();
+        include __DIR__.'/../../Resources/'.sprintf('%1$s/completion.%1$s.php', $shell);
+        $script = ob_get_clean();
+
+        $output->write($script);
+
+        return 0;
     }
 }
