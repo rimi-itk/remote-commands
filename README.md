@@ -5,6 +5,11 @@ Helps running commands on remote sites accesible via `ssh`
 ## Installation
 
 ```sh
+composer global config repositories.rimi-itk/remote-commands vcs https://github.com/rimi-itk/remote-commands
+composer global require rimi-itk/remote-commands
+```
+
+```sh
 git clone https://github.com/rimi-itk/remote-commands
 cd remote-commands
 composer install
