@@ -22,13 +22,9 @@ abstract class Command extends BaseCommand
     protected function configure()
     {
         $this
-            ->addArgument('site')
-            ->addArgument('arguments and options', InputArgument::IS_ARRAY);
-
-        $this
-            ->addOption('dump-sites', null, InputOption::VALUE_NONE, 'Dump configured sites as JSON');
-
-        $this->addOption('dump-completions', null, InputOption::VALUE_NONE, 'Dump completions scripts')
+            ->addArgument('arg', InputArgument::OPTIONAL, 'A domain name or a command (list or completion)')
+            ->addArgument('arguments and options', InputArgument::IS_ARRAY)
+            ->addOption('format', null, InputOption::VALUE_REQUIRED, 'The output format (json or txt)', 'json')
             ->addOption('shell', null, InputOption::VALUE_REQUIRED, 'Shell type ("bash" or "zsh")', isset($_SERVER['SHELL']) ? basename($_SERVER['SHELL'], '.exe') : null);
 
         // @see https://stackoverflow.com/a/39400593
@@ -62,25 +58,40 @@ abstract class Command extends BaseCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        if ($input->getOption('dump-sites')) {
-            return $this->dumpSites($input, $output);
-        }
-        if ($input->getOption('dump-completions')) {
-            return $this->dumpCompletions($input, $output);
+        $arg = $input->getArgument('arg');
+        $format = $input->getOption('format');
+
+        switch ($arg) {
+            case 'list':
+                return $this->list($input, $output, $format);
+
+            case 'completion':
+                return $this->completion($input, $output);
         }
 
-        $name = $input->getArgument('site');
-        if (null === $name) {
-            throw new RuntimeException('Not enough arguments (missing: "site").');
+        $site = $this->getSite($arg);
+        $tty = false;
+        if (false !== ($type = $input->getParameterOption('--site-completion'))) {
+            if ('command-options' === $type) {
+                $args = $this->getArguments();
+                $commandName = reset($args);
+                $command = $this->buildSiteCommandOptionsCommand($site, $commandName ?? '');
+            } else {
+                $command = $this->buildSiteCommandsCommand($site);
+            }
+        } else {
+            $command = $this->buildCommand($site);
+            $tty = true;
         }
-        $site = $this->getSite($name);
 
-        $command = $this->buildCommand($site);
-
-        $this->runOnSite($site['host'], $command, null, null, $input->getStream());
+        $this->runOnSite($site['host'], $command, $tty, null, null, $input->getStream());
 
         return 0;
     }
+
+    abstract protected function buildSiteCommandsCommand(array $site): array;
+
+    abstract protected function buildSiteCommandOptionsCommand(array $site, string $commandName): array;
 
     abstract protected function buildCommand(array $site): array;
 
@@ -97,20 +108,22 @@ abstract class Command extends BaseCommand
         $args = \array_slice($_SERVER['argv'], 3);
 
         return array_filter($args, static function (string $arg) {
-            // Only options starting with two dashes are supported.
-            return preg_match('/^([^-]|--)[a-z0-9]/i', $arg);
+            return !preg_match('/^--site-completion(?:=|$)/', $arg)
+                // Only options starting with two dashes are supported.
+                && preg_match('/^([^-]|--)[a-z0-9]/i', $arg);
         });
     }
 
-    protected function runOnSite(string $site, array $command, string $cwd = null, array $env = null, $input = null, ?float $timeout = 60)
+    protected function runOnSite(string $site, array $command, bool $tty = true, string $cwd = null, array $env = null, $input = null, ?float $timeout = 60)
     {
         $command = array_map('escapeshellarg', $command);
-        array_unshift($command, 'ssh', '-t', $site);
+        $sshStuff = array_filter(['ssh', $tty ? '-t' : null, $site]);
+        array_unshift($command, ...$sshStuff);
 
         $process = new Process($command, $cwd, $env, $input, $timeout);
 
         try {
-            $process->setTty(true);
+            $process->setTty($tty);
             $process->mustRun(static function ($type, $buffer) {
                 fwrite(Process::OUT === $type ? STDOUT : STDERR, $buffer);
             });
@@ -190,15 +203,20 @@ abstract class Command extends BaseCommand
         return array_filter($hosts);
     }
 
-    protected function dumpSites(InputInterface $input, OutputInterface $output)
+    protected function list(InputInterface $input, OutputInterface $output, string $format = null)
     {
         $sites = $this->getSites();
-        $output->writeln(json_encode($sites, JSON_THROW_ON_ERROR, 512));
+
+        if ('txt' === $format || false !== $input->getParameterOption('--raw')) {
+            $output->writeln(array_keys($sites));
+        } else {
+            $output->writeln(json_encode($sites, JSON_THROW_ON_ERROR, 512));
+        }
 
         return 0;
     }
 
-    protected function dumpCompletions(InputInterface $input, OutputInterface $output)
+    protected function completion(InputInterface $input, OutputInterface $output)
     {
         $shell = $input->getOption('shell');
 

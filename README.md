@@ -9,11 +9,15 @@ composer global config repositories.rimi-itk/remote-commands vcs https://github.
 composer global require rimi-itk/remote-commands
 ```
 
+### Completions
+
 ```sh
-git clone https://github.com/rimi-itk/remote-commands
-cd remote-commands
-composer install
+eval "$(remote-drupal-drush completion)"
 ```
+
+#### Helpers
+
+@TODO
 
 ## Usage
 
@@ -30,20 +34,20 @@ All configuration of sites is done in your [OpenSSH client configuration file
 
 Assuming the following configuration is set in `~/.ssh/config`
 
-```
+```config
 # https://man.openbsd.org/ssh_config#IgnoreUnknown
 IgnoreUnknown DRUPAL_*,SYMFONY_*
 
 Host drupal.example.com
-	…
-	DRUPAL_DRUSH_ROOT /data/www/drupal/htdocs
-	DRUPAL_DRUSH_URI https://drupal.example.com
-	…
+  …
+  DRUPAL_DRUSH_ROOT /data/www/drupal/htdocs
+  DRUPAL_DRUSH_URI https://drupal.example.com
+  …
 
 Host symfony.example.com
-	…
-	SYMFONY_CONSOLE_ROOT /data/www/symfony/htdocs
-	…
+  …
+  SYMFONY_CONSOLE_ROOT /data/www/symfony/htdocs
+  …
 ```
 
 then running `remote-command drupal:drush drupal.example.com` will be equivalent

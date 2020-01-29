@@ -9,6 +9,16 @@ class DrushCommand extends Command
 {
     protected static $defaultName = 'drupal:drush';
 
+    protected function buildSiteCommandsCommand(array $site): array
+    {
+        throw new \RuntimeException(__METHOD__);
+    }
+
+    protected function buildSiteCommandOptionsCommand(array $site, string $commandName): array
+    {
+        throw new \RuntimeException(__METHOD__);
+    }
+
     protected function buildCommand(array $site): array
     {
         $drush = 'drush';
@@ -37,7 +47,10 @@ class DrushCommand extends Command
     protected function configureSiteOptions(OptionsResolver $resolver)
     {
         parent::configureSiteOptions($resolver);
-        $resolver->setDefault('uri', null);
+        $resolver->setDefaults([
+            'drush' => null,
+            'uri' => null,
+        ]);
     }
 
     protected function getSites()
