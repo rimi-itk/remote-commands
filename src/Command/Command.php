@@ -117,7 +117,12 @@ abstract class Command extends BaseCommand
     protected function runOnSite(string $site, array $command, bool $tty = true, string $cwd = null, array $env = null, $input = null, ?float $timeout = 60)
     {
         $command = array_map('escapeshellarg', $command);
-        $sshStuff = array_filter(['ssh', $tty ? '-t' : null, $site]);
+        $sshStuff = array_filter([
+            'ssh',
+            $tty ? '-t' : null,
+            '-o', 'LogLevel=QUIET',
+            $site,
+        ]);
         array_unshift($command, ...$sshStuff);
 
         $process = new Process($command, $cwd, $env, $input, $timeout);
