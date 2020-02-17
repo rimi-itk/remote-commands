@@ -128,10 +128,12 @@ abstract class Command extends BaseCommand
         $process = new Process($command, $cwd, $env, $input, $timeout);
 
         try {
-            $process->setTty($tty);
-            $process->mustRun(static function ($type, $buffer) {
-                fwrite(Process::OUT === $type ? STDOUT : STDERR, $buffer);
-            });
+            $process
+                ->setTty($tty)
+                ->setTimeout(null)
+                ->mustRun(static function ($type, $buffer) {
+                    fwrite(Process::OUT === $type ? STDOUT : STDERR, $buffer);
+                });
         } catch (ProcessFailedException $e) {
             echo $e->getMessage();
         }
