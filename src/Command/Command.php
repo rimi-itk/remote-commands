@@ -158,6 +158,10 @@ abstract class Command extends BaseCommand
 
     protected function getSite(string $name = null)
     {
+        if (empty($name)) {
+            throw new RuntimeException('Missing site');
+        }
+
         $sites = $this->getSites();
 
         if (!isset($sites[$name])) {
