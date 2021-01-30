@@ -5,14 +5,13 @@ Helps running commands on remote hosts accesible via `ssh`
 ## Installation
 
 ```sh
-composer global config repositories.rimi-itk/remote-commands vcs https://github.com/rimi-itk/remote-commands
 composer global require rimi-itk/remote-commands
 ```
 
 ### Completions
 
 ```sh
-eval "$(remote-drupal-drush completion)"
+eval "$(remote-drupal-drush --completion)"
 ```
 
 #### Helpers

@@ -1,18 +1,18 @@
 _remote-command()
 {
-    local state com cur site sites site_command commands options
+    local state com cur host hosts host_command commands options
 
-    site=""
+    host=""
     if [[ ${words[2]:-} != -* ]]; then
-        site=${words[2]}
+        host=${words[2]}
         if [[ ${words[3]:-} != -* ]]; then
-            site_command=${words[3]}
+            host_command=${words[3]}
         fi
     fi
 
     cur=${words[${#words[@]}]}
 
-    # lookup for site
+    # lookup for host
     for word in "${words[@]:1}"; do
         if [[ $word != -* ]]; then
             com=$word
@@ -22,27 +22,27 @@ _remote-command()
 
     [[ ${cur} == --* ]] && state="option"
 
-    [[ $cur == $com ]] && state="site"
+    [[ $cur == $com ]] && state="host"
 
-    if [[ ! -z "$site" && -z "$state" ]]; then
-        state="site-command"
+    if [[ ! -z "$host" && -z "$state" ]]; then
+        state="host-command"
     fi
 
-    if [[ ! -z "$site_command" ]]; then
-        state="site-command-option"
+    if [[ ! -z "$host_command" ]]; then
+        state="host-command-option"
     fi
 
     case $state in
-        site)
-            sites=("${(@f)$(${words[1]} list --no-ansi --raw 2>/dev/null | awk '{ gsub(/:/, "\\:", $1); print }' | awk '{if (NF>1) print $1 ":" substr($0, index($0,$2)); else print $1}')}")
-            _describe 'site' sites
+        host)
+            hosts=("${(@f)$(${words[1]} list --no-ansi --raw 2>/dev/null | awk '{ gsub(/:/, "\\:", $1); print }' | awk '{if (NF>1) print $1 ":" substr($0, index($0,$2)); else print $1}')}")
+            _describe 'host' hosts
         ;;
-        site-command)
-            commands=("${(@f)$(${words[1]} ${site} --site-completion=command --no-ansi --raw 2>/dev/null | awk '{ gsub(/:/, "\\:", $1); print }' | awk '{if (NF>1) print $1 ":" substr($0, index($0,$2)); else print $1}')}")
+        host-command)
+            commands=("${(@f)$(${words[1]} ${host} --host-completion=command --no-ansi --raw 2>/dev/null | awk '{ gsub(/:/, "\\:", $1); print }' | awk '{if (NF>1) print $1 ":" substr($0, index($0,$2)); else print $1}')}")
             _describe 'command' commands
         ;;
-        site-command-option)
-            options=("${(@f)$(${words[1]} ${site} ${site_command} --site-completion=command-options --no-ansi 2>/dev/null | sed -n '/Options/,/^$/p' | sed -e '1d;$d' | sed 's/[^--]*\(--.*\)/\1/' | sed -En 's/[^ ]*(-(-[[:alnum:]]+){1,})[[:space:]]+(.*)/\1:\3/p' | awk '{$1=$1};1')}")
+        host-command-option)
+            options=("${(@f)$(${words[1]} ${host} ${host_command} --host-completion=command-options --no-ansi 2>/dev/null | sed -n '/Options/,/^$/p' | sed -e '1d;$d' | sed 's/[^--]*\(--.*\)/\1/' | sed -En 's/[^ ]*(-(-[[:alnum:]]+){1,})[[:space:]]+(.*)/\1:\3/p' | awk '{$1=$1};1')}")
             _describe 'option' options
         ;;
     esac
