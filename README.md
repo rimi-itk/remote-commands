@@ -1,6 +1,6 @@
 # Remote commands
 
-Helps running commands on remote sites accesible via `ssh`
+Helps running commands on remote hosts accesible via `ssh`
 
 ## Installation
 
@@ -29,7 +29,7 @@ bin/remote-command --help
 
 ## Configuration
 
-All configuration of sites is done in your [OpenSSH client configuration file
+All configuration of hosts is done in your [OpenSSH client configuration file
 (`~/.ssh/config`)](https://man.openbsd.org/ssh_config).
 
 Assuming the following configuration is set in `~/.ssh/config`

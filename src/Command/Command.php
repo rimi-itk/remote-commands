@@ -86,31 +86,31 @@ abstract class Command extends BaseCommand
             $this->remoteOptionsAndArguments = $input->getRemoteArguments();
         }
         $domainName = $input->getArgument('domain-name');
-        $site = $this->getSite($domainName);
+        $host = $this->getHost($domainName);
         $tty = false;
-        if (false !== ($type = $input->getParameterOption('--site-completion'))) {
+        if (false !== ($type = $input->getParameterOption('--host-completion'))) {
             if ('command-options' === $type) {
                 $args = $this->getRemoteArguments();
                 $commandName = reset($args);
-                $command = $this->buildSiteCommandOptionsCommand($site, $commandName ?? '');
+                $command = $this->buildHostCommandOptionsCommand($host, $commandName ?? '');
             } else {
-                $command = $this->buildSiteCommandsCommand($site);
+                $command = $this->buildHostCommandsCommand($host);
             }
         } else {
-            $command = $this->buildCommand($site);
+            $command = $this->buildCommand($host);
             $tty = true;
         }
 
-        $this->runOnSite($site['host'], $command, $tty, null, null, $input->getStream());
+        $this->runOnHost($host['host'], $command, $tty, null, null, $input->getStream());
 
         return 0;
     }
 
-    abstract protected function buildSiteCommandsCommand(array $site): array;
+    abstract protected function buildHostCommandsCommand(array $host): array;
 
-    abstract protected function buildSiteCommandOptionsCommand(array $site, string $commandName): array;
+    abstract protected function buildHostCommandOptionsCommand(array $host, string $commandName): array;
 
-    abstract protected function buildCommand(array $site): array;
+    abstract protected function buildCommand(array $host): array;
 
     protected function getRemoteArguments(): array
     {
@@ -124,14 +124,14 @@ abstract class Command extends BaseCommand
         return $this->remoteOptionsAndArguments ?? [];
     }
 
-    protected function runOnSite(string $site, array $command, bool $tty = true, string $cwd = null, array $env = null, $input = null, ?float $timeout = 60)
+    protected function runOnHost(string $host, array $command, bool $tty = true, string $cwd = null, array $env = null, $input = null, ?float $timeout = 60)
     {
         $command = array_map('escapeshellarg', $command);
         $sshStuff = array_filter([
             'ssh',
             $tty ? '-t' : null,
             '-o', 'LogLevel=QUIET',
-            $site,
+            $host,
         ]);
         array_unshift($command, ...$sshStuff);
         $this->debug(implode(PHP_EOL, [
@@ -155,49 +155,48 @@ abstract class Command extends BaseCommand
         }
     }
 
-    protected function getSites()
+    protected function getHosts()
     {
         $home = posix_getpwuid(posix_getuid())['dir'];
-        $sites = $this->parse(file_get_contents($home.'/.ssh/config'));
+        $hosta = $this->parse(file_get_contents($home.'/.ssh/config'));
 
-        foreach ($sites as $name => &$site) {
-            if (!isset($site['host'])) {
-                $site['host'] = $name;
+        foreach ($hosta as $name => &$host) {
+            if (!isset($host['host'])) {
+                $host['host'] = $name;
             }
-            if (isset($site['root'])) {
-                $site['root'] = rtrim($site['root'], '/');
+            if (isset($host['root'])) {
+                $host['root'] = rtrim($host['root'], '/');
             }
         }
 
-        return $sites;
+        return $hosta;
     }
 
-    protected function getSite(string $name = null)
+    protected function getHost(string $name = null)
     {
         if (empty($name)) {
-            throw new RuntimeException('Missing site');
+            throw new RuntimeException('Missing host');
         }
 
-        $sites = $this->getSites();
-
-        if (!isset($sites[$name])) {
-            throw new RuntimeException(sprintf('Invalid site: %s', $name));
+        $hosts = $this->getHosts();
+        if (!isset($hosts[$name])) {
+            throw new RuntimeException(sprintf('Invalid host: %s', $name));
         }
 
-        return $this->validateSite($sites[$name]);
+        return $this->validateHost($hosts[$name]);
     }
 
-    protected function configureSiteOptions(OptionsResolver $resolver)
+    protected function configureHostOptions(OptionsResolver $resolver)
     {
         $resolver->setRequired(['host', 'root']);
     }
 
-    protected function validateSite(array $site)
+    protected function validateHost(array $host)
     {
         $resolver = new OptionsResolver();
-        $this->configureSiteOptions($resolver);
+        $this->configureHostOptions($resolver);
 
-        return $resolver->resolve($site);
+        return $resolver->resolve($host);
     }
 
     protected function parse(string $config): array
@@ -232,12 +231,12 @@ abstract class Command extends BaseCommand
 
     protected function list(InputInterface $input, OutputInterface $output, string $format = null)
     {
-        $sites = $this->getSites();
+        $hosts = $this->getHosts();
 
         if ('txt' === $format || false !== $input->getParameterOption('--raw')) {
-            $output->writeln(array_keys($sites));
+            $output->writeln(array_keys($hosts));
         } else {
-            $output->writeln(json_encode($sites, JSON_THROW_ON_ERROR, 512));
+            $output->writeln(json_encode($hosts, JSON_THROW_ON_ERROR, 512));
         }
 
         return 0;

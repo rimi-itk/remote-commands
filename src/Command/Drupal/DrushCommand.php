@@ -9,60 +9,60 @@ class DrushCommand extends Command
 {
     protected static $defaultName = 'drupal:drush';
 
-    protected function buildSiteCommandsCommand(array $site): array
+    protected function buildHostCommandsCommand(array $host): array
     {
         throw new \RuntimeException(__METHOD__);
     }
 
-    protected function buildSiteCommandOptionsCommand(array $site, string $commandName): array
+    protected function buildHostCommandOptionsCommand(array $host, string $commandName): array
     {
         throw new \RuntimeException(__METHOD__);
     }
 
-    protected function buildCommand(array $site): array
+    protected function buildCommand(array $host): array
     {
         $drush = 'drush';
-        if (isset($site['drush'])) {
-            $drush = $site['drush'];
-            $slashIndex = strpos($site['drush'], '/');
+        if (isset($host['drush'])) {
+            $drush = $host['drush'];
+            $slashIndex = strpos($host['drush'], '/');
             if (0 === $slashIndex) {
                 // Absolute path
-                $drush = $site['drush'];
-            } elseif (false !== $slashIndex && isset($site['root'])) {
+                $drush = $host['drush'];
+            } elseif (false !== $slashIndex && isset($host['root'])) {
                 // Path relative to site root.
-                $drush = $site['root'].'/'.$site['drush'];
+                $drush = $host['root'].'/'.$host['drush'];
             }
         }
 
         $command = [$drush];
         foreach (['root', 'uri'] as $key) {
-            if (isset($site[$key])) {
-                $command[] = '--'.$key.'='.$site[$key];
+            if (isset($host[$key])) {
+                $command[] = '--'.$key.'='.$host[$key];
             }
         }
 
         return array_merge($command, $this->getRemoteOptionsAndArguments());
     }
 
-    protected function configureSiteOptions(OptionsResolver $resolver)
+    protected function configureHostOptions(OptionsResolver $resolver)
     {
-        parent::configureSiteOptions($resolver);
+        parent::configureHostOptions($resolver);
         $resolver->setDefaults([
             'drush' => null,
             'uri' => null,
         ]);
     }
 
-    protected function getSites()
+    protected function getHosts()
     {
-        $sites = parent::getSites();
+        $hosts = parent::getHosts();
 
-        foreach ($sites as $name => &$site) {
-            if (!isset($site['uri'])) {
-                $site['uri'] = 'https://'.$site['host'];
+        foreach ($hosts as $name => &$host) {
+            if (!isset($host['uri'])) {
+                $host['uri'] = 'https://'.$host['host'];
             }
         }
 
-        return $sites;
+        return $hosts;
     }
 }

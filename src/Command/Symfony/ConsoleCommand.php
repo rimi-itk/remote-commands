@@ -8,29 +8,29 @@ class ConsoleCommand extends Command
 {
     protected static $defaultName = 'symfony:console';
 
-    protected function buildSiteCommandsCommand(array $site): array
+    protected function buildHostCommandsCommand(array $host): array
     {
-        $command = [$this->getConsole($site), 'list', '--raw'];
+        $command = [$this->getConsole($host), 'list', '--raw'];
 
         return array_merge($command, $this->getRemoteOptionsAndArguments());
     }
 
-    protected function buildSiteCommandOptionsCommand(array $site, string $commandName): array
+    protected function buildHostCommandOptionsCommand(array $host, string $commandName): array
     {
-        $command = [$this->getConsole($site), '--help', $commandName, '--raw'];
+        $command = [$this->getConsole($host), '--help', $commandName, '--raw'];
 
         return array_merge($command, $this->getRemoteOptionsAndArguments());
     }
 
-    protected function buildCommand(array $site): array
+    protected function buildCommand(array $host): array
     {
-        $command = [$this->getConsole($site)];
+        $command = [$this->getConsole($host)];
 
         return array_merge($command, $this->getRemoteOptionsAndArguments());
     }
 
-    private function getConsole(array $site)
+    private function getConsole(array $host)
     {
-        return $site['root'].'/bin/console';
+        return $host['root'].'/bin/console';
     }
 }
