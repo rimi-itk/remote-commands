@@ -41,7 +41,7 @@ class DrushCommand extends Command
             }
         }
 
-        return array_merge($command, $this->getArgumentsAndOptions());
+        return array_merge($command, $this->getRemoteOptionsAndArguments());
     }
 
     protected function configureSiteOptions(OptionsResolver $resolver)

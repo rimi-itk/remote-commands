@@ -2,12 +2,16 @@
 
 namespace App\Command;
 
+use App\Console\Input\RemoteCommandInput;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerTrait;
 use Symfony\Component\Console\Command\Command as BaseCommand;
 use Symfony\Component\Console\Exception\RuntimeException;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputDefinition;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Process\Exception\ProcessFailedException;
@@ -15,6 +19,9 @@ use Symfony\Component\Process\Process;
 
 abstract class Command extends BaseCommand
 {
+    use LoggerAwareTrait;
+    use LoggerTrait;
+
     protected static $configPrefix;
 
     protected $dynamicOptions = [];
@@ -22,8 +29,10 @@ abstract class Command extends BaseCommand
     protected function configure()
     {
         $this
-            ->addArgument('arg', InputArgument::OPTIONAL, 'A domain name or a command (list or completion)')
-            ->addArgument('arguments and options', InputArgument::IS_ARRAY)
+            ->addArgument('domain-name', InputArgument::OPTIONAL, 'Domain name')
+            ->addArgument('remote options and arguments', InputArgument::IS_ARRAY, 'Options and arguments to pass on to the remote command')
+            ->addOption('list', null, InputOption::VALUE_NONE, 'List configures domains')
+            ->addOption('completion', null, InputOption::VALUE_NONE, 'Generate completion')
             ->addOption('format', null, InputOption::VALUE_REQUIRED, 'The output format (json or txt)', 'json')
             ->addOption('shell', null, InputOption::VALUE_REQUIRED, 'Shell type ("bash" or "zsh")', isset($_SERVER['SHELL']) ? basename($_SERVER['SHELL'], '.exe') : null);
 
@@ -56,24 +65,32 @@ abstract class Command extends BaseCommand
         });
     }
 
+    private $remoteOptionsAndArguments;
+
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $arg = $input->getArgument('arg');
-        $format = $input->getOption('format');
+        $logger = new ConsoleLogger($output);
+        $this->setLogger($logger);
 
-        switch ($arg) {
-            case 'list':
-                return $this->list($input, $output, $format);
+        if ($input->getOption('list')) {
+            $format = $input->getOption('format');
 
-            case 'completion':
-                return $this->completion($input, $output);
+            return $this->list($input, $output, $format);
         }
 
-        $site = $this->getSite($arg);
+        if ($input->getOption('completion')) {
+            return $this->completion($input, $output);
+        }
+
+        if ($input instanceof RemoteCommandInput) {
+            $this->remoteOptionsAndArguments = $input->getRemoteArguments();
+        }
+        $domainName = $input->getArgument('domain-name');
+        $site = $this->getSite($domainName);
         $tty = false;
         if (false !== ($type = $input->getParameterOption('--site-completion'))) {
             if ('command-options' === $type) {
-                $args = $this->getArguments();
+                $args = $this->getRemoteArguments();
                 $commandName = reset($args);
                 $command = $this->buildSiteCommandOptionsCommand($site, $commandName ?? '');
             } else {
@@ -95,23 +112,16 @@ abstract class Command extends BaseCommand
 
     abstract protected function buildCommand(array $site): array;
 
-    protected function getArguments(): array
+    protected function getRemoteArguments(): array
     {
-        return array_filter($this->getArgumentsAndOptions(), static function (string $token) {
+        return array_filter($this->getRemoteOptionsAndArguments(), static function (string $token) {
             return 0 !== strpos($token, '-');
         });
     }
 
-    protected function getArgumentsAndOptions(): array
+    protected function getRemoteOptionsAndArguments(): array
     {
-        // Remove script, command and site.
-        $args = \array_slice($_SERVER['argv'], 3);
-
-        return array_filter($args, static function (string $arg) {
-            return !preg_match('/^--site-completion(?:=|$)/', $arg)
-                // Only options starting with two dashes are supported.
-                && preg_match('/^([^-]|--)[a-z0-9]/i', $arg);
-        });
+        return $this->remoteOptionsAndArguments ?? [];
     }
 
     protected function runOnSite(string $site, array $command, bool $tty = true, string $cwd = null, array $env = null, $input = null, ?float $timeout = 60)
@@ -124,6 +134,12 @@ abstract class Command extends BaseCommand
             $site,
         ]);
         array_unshift($command, ...$sshStuff);
+        $this->debug(implode(PHP_EOL, [
+            'command:',
+            '',
+            ' '.implode(' ', $command),
+            '',
+        ]));
 
         $process = new Process($command, $cwd, $env, $input, $timeout);
 
@@ -238,5 +254,12 @@ abstract class Command extends BaseCommand
         $output->write($script);
 
         return 0;
+    }
+
+    public function log($level, $message, array $context = [])
+    {
+        if (null !== $this->logger) {
+            $this->logger->log($level, $message, $context);
+        }
     }
 }

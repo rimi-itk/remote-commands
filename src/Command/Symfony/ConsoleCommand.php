@@ -12,21 +12,21 @@ class ConsoleCommand extends Command
     {
         $command = [$this->getConsole($site), 'list', '--raw'];
 
-        return array_merge($command, $this->getArgumentsAndOptions());
+        return array_merge($command, $this->getRemoteOptionsAndArguments());
     }
 
     protected function buildSiteCommandOptionsCommand(array $site, string $commandName): array
     {
         $command = [$this->getConsole($site), '--help', $commandName, '--raw'];
 
-        return array_merge($command, $this->getArgumentsAndOptions());
+        return array_merge($command, $this->getRemoteOptionsAndArguments());
     }
 
     protected function buildCommand(array $site): array
     {
         $command = [$this->getConsole($site)];
 
-        return array_merge($command, $this->getArgumentsAndOptions());
+        return array_merge($command, $this->getRemoteOptionsAndArguments());
     }
 
     private function getConsole(array $site)
