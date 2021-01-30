@@ -9,6 +9,11 @@ class DrushCommand extends Command
 {
     protected static $defaultName = 'drupal:drush';
 
+    protected static $ttyCommands = [
+      'sql:cli',
+      'sql-cli',
+    ];
+
     protected function buildHostCommandsCommand(array $host): array
     {
         throw new \RuntimeException(__METHOD__);

@@ -33,6 +33,7 @@ abstract class Command extends BaseCommand
             ->addArgument('remote options and arguments', InputArgument::IS_ARRAY, 'Options and arguments to pass on to the remote command')
             ->addOption('list', null, InputOption::VALUE_NONE, 'List configures domains')
             ->addOption('completion', null, InputOption::VALUE_NONE, 'Generate completion')
+            ->addOption('tty', null, InputOption::VALUE_NONE, 'Force tty')
             ->addOption('format', null, InputOption::VALUE_REQUIRED, 'The output format (json or txt)', 'json')
             ->addOption('shell', null, InputOption::VALUE_REQUIRED, 'Shell type ("bash" or "zsh")', isset($_SERVER['SHELL']) ? basename($_SERVER['SHELL'], '.exe') : null);
 
@@ -87,7 +88,6 @@ abstract class Command extends BaseCommand
         }
         $domainName = $input->getArgument('domain-name');
         $host = $this->getHost($domainName);
-        $tty = false;
         if (false !== ($type = $input->getParameterOption('--host-completion'))) {
             if ('command-options' === $type) {
                 $args = $this->getRemoteArguments();
@@ -98,9 +98,9 @@ abstract class Command extends BaseCommand
             }
         } else {
             $command = $this->buildCommand($host);
-            $tty = true;
         }
 
+        $tty = $input->getOption('tty') || $this->isTty();
         $this->runOnHost($host['host'], $command, $tty, null, null, $input->getStream());
 
         return 0;
@@ -112,11 +112,20 @@ abstract class Command extends BaseCommand
 
     abstract protected function buildCommand(array $host): array;
 
+    protected static $ttyCommands = [];
+
+    protected function isTty(): bool
+    {
+        $command = $this->getRemoteArguments()[0];
+
+        return \in_array($command, static::$ttyCommands, true);
+    }
+
     protected function getRemoteArguments(): array
     {
-        return array_filter($this->getRemoteOptionsAndArguments(), static function (string $token) {
+        return array_values(array_filter($this->getRemoteOptionsAndArguments(), static function (string $token) {
             return 0 !== strpos($token, '-');
-        });
+        }));
     }
 
     protected function getRemoteOptionsAndArguments(): array
@@ -148,8 +157,9 @@ abstract class Command extends BaseCommand
                 ->setTty($tty)
                 ->setTimeout(null)
                 ->mustRun(static function ($type, $buffer) {
-                    fwrite(Process::OUT === $type ? STDOUT : STDERR, $buffer);
-                });
+                    fwrite(Process::ERR === $type ? STDERR : STDOUT, $buffer);
+                })
+            ;
         } catch (ProcessFailedException $e) {
             echo $e->getMessage();
         }

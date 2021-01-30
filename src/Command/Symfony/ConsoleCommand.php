@@ -8,6 +8,10 @@ class ConsoleCommand extends Command
 {
     protected static $defaultName = 'symfony:console';
 
+    protected static $ttyCommands = [
+        'itk-dev:database:cli',
+    ];
+
     protected function buildHostCommandsCommand(array $host): array
     {
         $command = [$this->getConsole($host), 'list', '--raw'];
