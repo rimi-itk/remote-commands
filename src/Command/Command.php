@@ -116,7 +116,8 @@ abstract class Command extends BaseCommand
 
     protected function isTty(): bool
     {
-        $command = $this->getRemoteArguments()[0];
+        $args = $this->getRemoteArguments();
+        $command = reset($args);
 
         return \in_array($command, static::$ttyCommands, true);
     }
@@ -143,7 +144,7 @@ abstract class Command extends BaseCommand
             $host,
         ]);
         array_unshift($command, ...$sshStuff);
-        $this->debug(implode(PHP_EOL, [
+        $this->debug(implode(\PHP_EOL, [
             'command:',
             '',
             ' '.implode(' ', $command),
@@ -157,7 +158,7 @@ abstract class Command extends BaseCommand
                 ->setTty($tty)
                 ->setTimeout(null)
                 ->mustRun(static function ($type, $buffer) {
-                    fwrite(Process::ERR === $type ? STDERR : STDOUT, $buffer);
+                    fwrite(Process::ERR === $type ? \STDERR : \STDOUT, $buffer);
                 })
             ;
         } catch (ProcessFailedException $e) {
@@ -216,7 +217,7 @@ abstract class Command extends BaseCommand
         }
 
         $hosts = [];
-        $lines = array_map('trim', explode(PHP_EOL, $config));
+        $lines = array_map('trim', explode(\PHP_EOL, $config));
         $name = null;
         $configNamePattern = '/^'.preg_quote(static::$configPrefix, '/').'/i';
         foreach ($lines as $line) {
@@ -246,7 +247,7 @@ abstract class Command extends BaseCommand
         if ('txt' === $format || false !== $input->getParameterOption('--raw')) {
             $output->writeln(array_keys($hosts));
         } else {
-            $output->writeln(json_encode($hosts, JSON_THROW_ON_ERROR, 512));
+            $output->writeln(json_encode($hosts, \JSON_THROW_ON_ERROR, 512));
         }
 
         return 0;
