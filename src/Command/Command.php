@@ -33,6 +33,7 @@ abstract class Command extends BaseCommand
             ->addArgument('remote options and arguments', InputArgument::IS_ARRAY, 'Options and arguments to pass on to the remote command')
             ->addOption('list', null, InputOption::VALUE_NONE, 'List configures domains')
             ->addOption('completion', null, InputOption::VALUE_NONE, 'Generate completion')
+            ->addOption('host-completion', null, InputOption::VALUE_REQUIRED, 'Generate completion for a command on host')
             ->addOption('tty', null, InputOption::VALUE_NONE, 'Force tty')
             ->addOption('format', null, InputOption::VALUE_REQUIRED, 'The output format (json or txt)', 'json')
             ->addOption('shell', null, InputOption::VALUE_REQUIRED, 'Shell type ("bash" or "zsh")', isset($_SERVER['SHELL']) ? basename($_SERVER['SHELL'], '.exe') : null);
@@ -88,7 +89,7 @@ abstract class Command extends BaseCommand
         }
         $domainName = $input->getArgument('domain-name');
         $host = $this->getHost($domainName);
-        if (false !== ($type = $input->getParameterOption('--host-completion'))) {
+        if ($type = $input->getOption('host-completion')) {
             if ('command-options' === $type) {
                 $args = $this->getRemoteArguments();
                 $commandName = reset($args);
