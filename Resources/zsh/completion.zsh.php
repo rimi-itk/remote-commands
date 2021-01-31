@@ -38,7 +38,7 @@ _remote-command()
             _describe 'host' hosts
         ;;
         host-command)
-            commands=("${(@f)$(${words[1]} --host-completion=command ${host} --no-ansi --raw 2>/dev/null | awk '{ gsub(/:/, "\\:", $1); print }' | awk '{if (NF>1) print $1 ":" substr($0, index($0,$2)); else print $1}')}")
+            commands=("${(@f)$(${words[1]} --host-completion=command ${host} --no-ansi 2>/dev/null | awk '{ gsub(/:/, "\\:", $1); print }' | awk '{if (NF>1) print $1 ":" substr($0, index($0,$2)); else print $1}')}")
             _describe 'command' commands
         ;;
         host-command-option)
