@@ -170,9 +170,9 @@ abstract class Command extends BaseCommand
     protected function getHosts()
     {
         $home = posix_getpwuid(posix_getuid())['dir'];
-        $hosta = $this->parse(file_get_contents($home.'/.ssh/config'));
+        $hosts = $this->parse(file_get_contents($home.'/.ssh/config'));
 
-        foreach ($hosta as $name => &$host) {
+        foreach ($hosts as $name => &$host) {
             if (!isset($host['host'])) {
                 $host['host'] = $name;
             }
@@ -181,7 +181,7 @@ abstract class Command extends BaseCommand
             }
         }
 
-        return $hosta;
+        return $hosts;
     }
 
     protected function getHost(string $name = null)
