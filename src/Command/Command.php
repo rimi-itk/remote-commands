@@ -101,8 +101,8 @@ abstract class Command extends BaseCommand
             $command = $this->buildCommand($host);
         }
 
-        $tty = $input->getOption('tty') || $this->isTty();
-        $this->runOnHost($host['host'], $command, $tty, null, null, $input->getStream());
+        $tty = $input->getOption('tty') || isset($host['cwd']) || $this->isTty();
+        $this->runOnHost($host, $command, $tty, null, null, $input->getStream());
 
         return 0;
     }
@@ -135,14 +135,18 @@ abstract class Command extends BaseCommand
         return $this->remoteOptionsAndArguments ?? [];
     }
 
-    protected function runOnHost(string $host, array $command, bool $tty = true, string $cwd = null, array $env = null, $input = null, ?float $timeout = 60)
+    protected function runOnHost(array $host, array $command, bool $tty = true, string $cwd = null, array $env = null, $input = null, ?float $timeout = 60)
     {
-        $command = array_map('escapeshellarg', $command);
+        // Escape command arguments, but not the command itself.
+        $command = array_merge([reset($command)], array_map('escapeshellarg', \array_slice($command, 1)));
+        if (isset($host['cwd'])) {
+            array_unshift($command, 'cd '.escapeshellarg($host['cwd']).' &&');
+        }
         $sshStuff = array_filter([
             'ssh',
             $tty ? '-t' : null,
             '-o', 'LogLevel=QUIET',
-            $host,
+            $host['host'],
         ]);
         array_unshift($command, ...$sshStuff);
         $this->debug(implode(\PHP_EOL, [

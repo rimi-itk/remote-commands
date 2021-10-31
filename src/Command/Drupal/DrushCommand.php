@@ -40,6 +40,7 @@ class DrushCommand extends Command
         parent::configureHostOptions($resolver);
         $resolver->setDefaults([
             'drush' => null,
+            'cwd' => null,
             'uri' => null,
         ]);
     }
@@ -57,13 +58,13 @@ class DrushCommand extends Command
         return $hosts;
     }
 
-    private function getDrush(array $host)
+    private function getDrush(array $host): array
     {
         $drush = 'drush';
         if (isset($host['drush'])) {
             $drush = $host['drush'];
             $slashIndex = strpos($host['drush'], '/');
-            if (0 === $slashIndex) {
+            if (0 === $slashIndex || 0 === strpos($host['drush'], 'docker-compose')) {
                 // Absolute path
                 $drush = $host['drush'];
             } elseif (false !== $slashIndex && isset($host['root'])) {
