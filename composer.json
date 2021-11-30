@@ -3,13 +3,13 @@
     "description": "Run Drupal and Symfony cli commands via ssh",
     "license": "MIT",
     "require": {
-        "php": "^7.3",
+        "php": "^8.0",
         "ext-json": "*",
         "ext-posix": "*",
         "psr/log": "^1.1",
-        "symfony/console": "^4.0|^5.0",
-        "symfony/options-resolver": "^5.0",
-        "symfony/process": "^4.0|^5.0"
+        "symfony/console": "^5.4",
+        "symfony/options-resolver": "^5.4",
+        "symfony/process": "^5.4"
     },
     "bin": [
         "bin/remote-command",
@@ -22,17 +22,17 @@
         }
     },
     "require-dev": {
-        "friendsofphp/php-cs-fixer": "^2.16"
+        "friendsofphp/php-cs-fixer": "^3.3"
     },
     "scripts": {
         "coding-standards-check/php-cs-fixer": [
-            "php-cs-fixer --config=.php_cs.dist fix --dry-run"
+            "php-cs-fixer fix --dry-run"
         ],
         "coding-standards-check": [
             "@coding-standards-check/php-cs-fixer"
         ],
         "coding-standards-apply/php-cs-fixer": [
-            "php-cs-fixer --config=.php_cs.dist fix"
+            "php-cs-fixer fix"
         ],
         "coding-standards-apply": [
             "@coding-standards-apply/php-cs-fixer"

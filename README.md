@@ -40,7 +40,18 @@ IgnoreUnknown DRUPAL_*,SYMFONY_*
 Host drupal.example.com
   …
   DRUPAL_DRUSH_ROOT /data/www/drupal/htdocs
+  DRUPAL_DRUSH_DRUSH ../vendor/bin/drush
   DRUPAL_DRUSH_URI https://drupal.example.com
+  …
+
+# Example with docker-compose
+Host drupal.example.com
+  …
+  DRUPAL_DRUSH_DRUSH docker-compose --env-file .env.docker.local --file docker-compose.server.yml exec phpfpm vendor/bin/drush
+  # The directory to change to before running the drush command
+  DRUPAL_DRUSH_CWD /data/www/drupal/htdocs
+  # Drush root inside docker container
+  DRUPAL_DRUSH_ROOT /app
   …
 
 Host symfony.example.com
