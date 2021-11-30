@@ -34,7 +34,7 @@ _remote-command()
 
     case $state in
         host)
-            hosts=("${(@f)$(${words[1]} --list --no-ansi --raw 2>/dev/null | awk '{ gsub(/:/, "\\:", $1); print }' | awk '{if (NF>1) print $1 ":" substr($0, index($0,$2)); else print $1}')}")
+            hosts=("${(@f)$(${words[1]} --list --no-ansi 2>/dev/null | awk '{ gsub(/:/, "\\:", $1); print }' | awk '{if (NF>1) print $1 ":" substr($0, index($0,$2)); else print $1}')}")
             _describe 'host' hosts
         ;;
         host-command)
@@ -50,3 +50,7 @@ _remote-command()
 
 compdef _remote-command remote-drupal-drush
 compdef _remote-command remote-symfony-console
+
+# Local Variables:
+# mode: sh
+# End:
