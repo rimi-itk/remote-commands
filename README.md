@@ -39,7 +39,7 @@ IgnoreUnknown DRUPAL_*,SYMFONY_*
 
 Host drupal.example.com
   …
-  DRUPAL_DRUSH_ROOT /data/www/drupal/htdocs
+  DRUPAL_DRUSH_ROOT /data/www/drupal/htdocs/web
   DRUPAL_DRUSH_DRUSH ../vendor/bin/drush
   DRUPAL_DRUSH_URI https://drupal.example.com
   …
