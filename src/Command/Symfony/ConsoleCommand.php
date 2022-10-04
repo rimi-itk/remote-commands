@@ -3,6 +3,8 @@
 namespace App\Command\Symfony;
 
 use App\Command\Command;
+use Symfony\Component\OptionsResolver\Options;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class ConsoleCommand extends Command
 {
@@ -28,13 +30,37 @@ class ConsoleCommand extends Command
 
     protected function buildCommand(array $host): array
     {
-        $command = [$this->getConsole($host)];
+        $command = $this->getConsole($host);
 
         return array_merge($command, $this->getRemoteOptionsAndArguments());
     }
 
-    private function getConsole(array $host)
+    protected function configureHostOptions(OptionsResolver $resolver)
     {
-        return $host['root'].'/bin/console';
+        parent::configureHostOptions($resolver);
+        $resolver->setDefaults([
+            'console' => null,
+            'cwd' => static fn (Options $options) => $options['root'],
+        ]);
+    }
+
+    private function getConsole(array $host): array
+    {
+        $console = 'bin/console';
+        if (isset($host['console'])) {
+            $console = $host['console'];
+            $slashIndex = strpos($host['console'], '/');
+            if (0 === $slashIndex || preg_match('@(itkdev-)?docker-compose@', $host['console'])) {
+                // Absolute path
+                $console = $host['console'];
+            } elseif (false !== $slashIndex && isset($host['root'])) {
+                // Path relative to site root.
+                $console = $host['root'].'/'.$host['console'];
+            }
+        }
+
+        $command = [$console];
+
+        return $command;
     }
 }

@@ -58,6 +58,12 @@ Host symfony.example.com
   …
   SYMFONY_CONSOLE_ROOT /data/www/symfony/htdocs
   …
+
+# Example with docker-compose
+  …
+  SYMFONY_CONSOLE_ROOT /data/www/symfony/htdocs
+  SYMFONY_CONSOLE_CONSOLE itkdev-docker-compose-server exec phpfpm bin/console
+
 ```
 
 then running `remote-command drupal:drush drupal.example.com` will be equivalent
