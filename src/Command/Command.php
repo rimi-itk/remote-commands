@@ -174,7 +174,28 @@ abstract class Command extends BaseCommand
     protected function getHosts()
     {
         $home = posix_getpwuid(posix_getuid())['dir'];
-        $hosts = $this->parse(file_get_contents($home.'/.ssh/config'));
+        $configDir = $home.'/.ssh';
+        $config = file_get_contents($configDir.'/config');
+        // Expand Include statements  (cf. https://man7.org/linux/man-pages/man5/ssh_config.5.html)
+        $config = preg_replace_callback('/^\s*Include\s+(?P<spec>.+)$/m', static function (array $matches) use ($configDir) {
+            $replace = '';
+
+            $cwd = getcwd();
+            // Include files relative to ~/.ssh
+            chdir($configDir);
+            $filenames = glob($matches['spec'], \GLOB_NOSORT);
+            if (\is_array($filenames)) {
+                foreach ($filenames as $filename) {
+                    if ($config = file_get_contents($filename)) {
+                        $replace .= \PHP_EOL.$config.\PHP_EOL;
+                    }
+                }
+            }
+            chdir($cwd);
+
+            return '# '.$matches[0].' (expanded)'.\PHP_EOL.$replace.\PHP_EOL;
+        }, $config);
+        $hosts = $this->parse($config);
 
         foreach ($hosts as $name => &$host) {
             if (!isset($host['host'])) {
