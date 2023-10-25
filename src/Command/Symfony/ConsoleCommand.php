@@ -50,7 +50,7 @@ class ConsoleCommand extends Command
         if (isset($host['console'])) {
             $console = $host['console'];
             $slashIndex = strpos($host['console'], '/');
-            if (0 === $slashIndex || preg_match('@(itkdev-)?docker-compose@', $host['console'])) {
+            if (0 === $slashIndex || preg_match('@(itkdev-)?docker[ -]compose@', $host['console'])) {
                 // Absolute path
                 $console = $host['console'];
             } elseif (false !== $slashIndex && isset($host['root'])) {

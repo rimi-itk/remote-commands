@@ -64,7 +64,7 @@ class DrushCommand extends Command
         if (isset($host['drush'])) {
             $drush = $host['drush'];
             $slashIndex = strpos($host['drush'], '/');
-            if (0 === $slashIndex || preg_match('/^[a-z-]*docker-compose/', $host['drush'])) {
+            if (0 === $slashIndex || preg_match('/^[a-z-]*docker[ -]compose/', $host['drush'])) {
                 // Absolute path
                 $drush = $host['drush'];
             } elseif (false !== $slashIndex && isset($host['root'])) {
