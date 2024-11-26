@@ -50,7 +50,7 @@ abstract class Command extends BaseCommand
                 $this->dynamicOptions = &$dynamicOptions;
             }
 
-            public function getOption($name)
+            public function getOption($name): InputOption
             {
                 if (!parent::hasOption($name)) {
                     $this->addOption(new InputOption($name, $name, InputOption::VALUE_OPTIONAL));
@@ -60,7 +60,7 @@ abstract class Command extends BaseCommand
                 return parent::getOption($name);
             }
 
-            public function hasOption($name)
+            public function hasOption($name): bool
             {
                 return true;
             }
@@ -69,7 +69,7 @@ abstract class Command extends BaseCommand
 
     private $remoteOptionsAndArguments;
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $logger = new ConsoleLogger($output);
         $this->setLogger($logger);
@@ -104,7 +104,7 @@ abstract class Command extends BaseCommand
         $tty = $input->getOption('tty') || isset($host['cwd']) || $this->isTty();
         $this->runOnHost($host, $command, $tty, null, null, $input->getStream());
 
-        return 0;
+        return self::SUCCESS;
     }
 
     abstract protected function buildHostCommandsCommand(array $host): array;
@@ -126,7 +126,7 @@ abstract class Command extends BaseCommand
     protected function getRemoteArguments(): array
     {
         return array_values(array_filter($this->getRemoteOptionsAndArguments(), static function (string $token) {
-            return 0 !== strpos($token, '-');
+            return !str_starts_with($token, '-');
         }));
     }
 
@@ -135,7 +135,7 @@ abstract class Command extends BaseCommand
         return $this->remoteOptionsAndArguments ?? [];
     }
 
-    protected function runOnHost(array $host, array $command, bool $tty = true, string $cwd = null, array $env = null, $input = null, ?float $timeout = 60)
+    protected function runOnHost(array $host, array $command, bool $tty = true, ?string $cwd = null, ?array $env = null, $input = null, ?float $timeout = 60): void
     {
         // Escape command arguments, but not the command itself.
         $command = array_merge([reset($command)], array_map('escapeshellarg', \array_slice($command, 1)));
@@ -209,7 +209,7 @@ abstract class Command extends BaseCommand
         return $hosts;
     }
 
-    protected function getHost(string $name = null)
+    protected function getHost(?string $name = null)
     {
         if (empty($name)) {
             throw new RuntimeException('Missing host');
@@ -217,13 +217,13 @@ abstract class Command extends BaseCommand
 
         $hosts = $this->getHosts();
         if (!isset($hosts[$name])) {
-            throw new RuntimeException(sprintf('Invalid host: %s', $name));
+            throw new RuntimeException(\sprintf('Invalid host: %s', $name));
         }
 
         return $this->validateHost($hosts[$name]);
     }
 
-    protected function configureHostOptions(OptionsResolver $resolver)
+    protected function configureHostOptions(OptionsResolver $resolver): void
     {
         $resolver->setRequired(['host', 'root']);
     }
@@ -266,7 +266,7 @@ abstract class Command extends BaseCommand
         return array_filter($hosts);
     }
 
-    protected function list(InputInterface $input, OutputInterface $output, string $format = null)
+    protected function list(InputInterface $input, OutputInterface $output, ?string $format = null)
     {
         $hosts = $this->getHosts();
 
@@ -284,7 +284,7 @@ abstract class Command extends BaseCommand
         $shell = $input->getOption('shell');
 
         ob_start();
-        include __DIR__.'/../../Resources/'.sprintf('%1$s/completion.%1$s.php', $shell);
+        include __DIR__.'/../../Resources/'.\sprintf('%1$s/completion.%1$s.php', $shell);
         $script = ob_get_clean();
 
         $output->write($script);
@@ -292,7 +292,7 @@ abstract class Command extends BaseCommand
         return 0;
     }
 
-    public function log($level, $message, array $context = [])
+    public function log($level, $message, array $context = []): void
     {
         if (null !== $this->logger) {
             $this->logger->log($level, $message, $context);

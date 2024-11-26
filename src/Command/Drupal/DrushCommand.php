@@ -3,15 +3,15 @@
 namespace App\Command\Drupal;
 
 use App\Command\Command;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+#[AsCommand('drupal:drush')]
 class DrushCommand extends Command
 {
-    protected static $defaultName = 'drupal:drush';
-
     protected static $ttyCommands = [
-      'sql:cli',
-      'sql-cli',
+        'sql:cli',
+        'sql-cli',
     ];
 
     protected function buildHostCommandsCommand(array $host): array
@@ -35,7 +35,7 @@ class DrushCommand extends Command
         return array_merge($command, $this->getRemoteOptionsAndArguments());
     }
 
-    protected function configureHostOptions(OptionsResolver $resolver)
+    protected function configureHostOptions(OptionsResolver $resolver): void
     {
         parent::configureHostOptions($resolver);
         $resolver->setDefaults([

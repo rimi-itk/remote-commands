@@ -3,13 +3,13 @@
 namespace App\Command\Symfony;
 
 use App\Command\Command;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+#[AsCommand('symfony:console')]
 class ConsoleCommand extends Command
 {
-    protected static $defaultName = 'symfony:console';
-
     protected static $ttyCommands = [
         'itk-dev:database:cli',
     ];
@@ -35,7 +35,7 @@ class ConsoleCommand extends Command
         return array_merge($command, $this->getRemoteOptionsAndArguments());
     }
 
-    protected function configureHostOptions(OptionsResolver $resolver)
+    protected function configureHostOptions(OptionsResolver $resolver): void
     {
         parent::configureHostOptions($resolver);
         $resolver->setDefaults([

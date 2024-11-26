@@ -9,13 +9,13 @@ class RemoteCommandInput extends ArgvInput
 {
     private $remoteArguments = [];
 
-    public function __construct(array $argv = null, InputDefinition $definition = null)
+    public function __construct(?array $argv = null, ?InputDefinition $definition = null)
     {
         $argv = $argv ?? $_SERVER['argv'] ?? [];
         // Skip application name and command.
         $index = 2;
         // Skip any options.
-        while ($index < \count($argv) && 0 === strpos($argv[$index], '-')) {
+        while ($index < \count($argv) && str_starts_with($argv[$index], '-')) {
             ++$index;
         }
         // Skip the domain name.
